@@ -2,6 +2,7 @@ import http, { IncomingMessage, ServerResponse } from 'http';
 import url from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import { sendJSONResponse } from './sendResponse';
+import { extractUserId } from './extractUserId';
 
 interface User {
     id: string;
@@ -15,85 +16,85 @@ interface RouteHandler {
 }
 
 let users: User[] = [];
-const headers = {'Content-Type': 'application/json' };
+
 
 export const routes: { [path: string]: { [method: string]: RouteHandler } } = {
     'api/users': {
         GET: (_, res) => {
-            res.writeHead(200, headers);
-            res.end(JSON.stringify(users));
+            sendJSONResponse(res, 200, users);
         },
         POST: (req, res) => {
-            let body = '';
-            req.on('data', (chunk) => {
-                body += chunk.toString();
-            });
-            req.on('end', () => {
-                const {username, age, hobbies } = JSON.parse(body);
+            try {
+                let body = '';
+                req.on('data', (chunk) => {
+                    body += chunk.toString();
+                });
+                req.on('end', () => {
+                    const {username, age, hobbies } = JSON.parse(body);
+                    !username || !age ? sendJSONResponse(res, 200, { message: 'Username and age are required!'}) : null
 
-                if(!username || !age) {
-                    res.writeHead(200, headers);
-                    res.end(JSON.stringify({ message: 'Username and age is required!'}));
-                    return;
-                } 
-
-                const newUser: User = {
-                    id: uuidv4(),
-                    username,
-                    age,
-                    hobbies: hobbies || []
-                };
-                users.push(newUser);
-
-                res.writeHead(201, headers);
-                res.end(JSON.stringify(newUser));
-            });
+                    const newUser: User = {
+                        id: uuidv4(),
+                        username,
+                        age,
+                        hobbies: hobbies || []
+                    };
+                    users.push(newUser);
+                    sendJSONResponse(res, 201, newUser);
+                });
+            } catch (error) {
+                console.error('Error during creating user', error);
+            }
         }
     },
     '/api/users/:userId': {
         GET: (req, res) => {
-            const parsedURL = url.parse(req.url || '', true);
-            const userId = parsedURL.pathname?.split('/')[3];
-
-            if(!userId) {
-                res.writeHead(400, headers);
-                res.end(JSON.stringify({ message: 'Invalid userId' }));
-                return;
+            try {
+                const userId = extractUserId(req);
+                !userId && sendJSONResponse(res, 400, { message: 'Invalid userId' });
+                const user = users.find(user => user.id === userId);
+                !user && sendJSONResponse(res, 404, { message: 'User not found' });
+                sendJSONResponse(res, 200, user);
+            } catch (error) {
+                console.error('Error during getting user', error);
             }
-
-            const user = users.find(user => user.id === userId);
-
-            if (!user) {
-                res.writeHead(404, headers);
-                res.end(JSON.stringify({ message: 'User not found' }));
-                return;
-            }
-
-            res.writeHead(200, headers);
-            res.end(JSON.stringify(user));
         },
         PUT: (req, res) => {
-            let body = '';
-            req.on('data', (chunk) => {
-                body += chunk.toString();
-            });
-            req.on('end', () => {
-                const { userId, username, age, hobbies } = JSON.parse(body);
-                const userIndex = users.findIndex((user) => user.id === userId); 
+            try {
+                let body = '';
+                req.on('data', (chunk) => {
+                    body += chunk.toString();
+                });
+                req.on('end', () => {
+                    const { userId, username, age, hobbies } = JSON.parse(body);
+                    const userIndex = users.findIndex((user) => user.id === userId); 
 
-                userIndex === -1 && sendJSONResponse(res, 404, { message: 'User not found' });
-                !username || !age && sendJSONResponse(res, 400, { message: 'Username and age are required' });
+                    userIndex === -1 && sendJSONResponse(res, 404, { message: 'User not found' });
+                    !username || !age && sendJSONResponse(res, 400, { message: 'Username and age are required' });
 
-                users[userIndex] = {
-                    ...users[userIndex],
-                    username,
-                    age,
-                    hobbies: hobbies || users[userIndex].hobbies
-                };
-                sendJSONResponse(res, 200, users[userIndex]);
-            })
+                    users[userIndex] = {
+                        ...users[userIndex],
+                        username,
+                        age,
+                        hobbies: hobbies || users[userIndex].hobbies
+                    };
+                    sendJSONResponse(res, 200, users[userIndex]);
+                })
+            } catch (error) {
+                console.error('Error during updating existing user', error);
+            }
         },
         DELETE: (req, res) => {
+            try {
+                const userId = extractUserId(req);
+                !userId && sendJSONResponse(res, 400, { message: 'Invalid userId' });
+                const index = users.findIndex(user => user.id === userId);
+                index === -1 && sendJSONResponse(res, 404, { message: 'User not found' });
+                users.splice(index, 1);
+                sendJSONResponse(res, 204, { message: 'User has been successfully deleted' });
+            } catch (error) {
+                console.error('Error during removing the user', error);
+            }
             
         }
     },
