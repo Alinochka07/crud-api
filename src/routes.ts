@@ -1,6 +1,7 @@
 import http, { IncomingMessage, ServerResponse } from 'http';
 import url from 'url';
 import { v4 as uuidv4 } from 'uuid';
+import { sendJSONResponse } from './sendResponse';
 
 interface User {
     id: string;
@@ -72,16 +73,33 @@ export const routes: { [path: string]: { [method: string]: RouteHandler } } = {
             res.end(JSON.stringify(user));
         },
         PUT: (req, res) => {
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk.toString();
+            });
+            req.on('end', () => {
+                const { userId, username, age, hobbies } = JSON.parse(body);
+                const userIndex = users.findIndex((user) => user.id === userId); 
 
+                userIndex === -1 && sendJSONResponse(res, 404, { message: 'User not found' });
+                !username || !age && sendJSONResponse(res, 400, { message: 'Username and age are required' });
+
+                users[userIndex] = {
+                    ...users[userIndex],
+                    username,
+                    age,
+                    hobbies: hobbies || users[userIndex].hobbies
+                };
+                sendJSONResponse(res, 200, users[userIndex]);
+            })
         },
         DELETE: (req, res) => {
-
+            
         }
     },
     notFound: {
         GET: (req: IncomingMessage, res: ServerResponse) => {
-          res.writeHead(404, headers);
-          res.end(JSON.stringify({ message: 'Not Found' }));
+            sendJSONResponse(res, 404, { message: 'Not Found' });
         }
       }
 }
