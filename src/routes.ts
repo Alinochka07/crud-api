@@ -1,5 +1,4 @@
-import http, { IncomingMessage, ServerResponse } from 'http';
-import url from 'url';
+import { IncomingMessage, ServerResponse } from 'http';
 import { v4 as uuidv4 } from 'uuid';
 import { sendJSONResponse } from './sendResponse';
 import { extractUserId } from './extractUserId';

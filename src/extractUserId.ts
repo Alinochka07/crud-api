@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage } from 'http';
 import * as url from 'url';
 
 export const extractUserId = (req: IncomingMessage) => {

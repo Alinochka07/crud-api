@@ -1,0 +1,14 @@
+[
+    {
+        "id": "88bce4c6-1712-4fa4-a8bb-21df3e9cda67",
+        "username": "John Doe",
+        "age": "27",
+        "hobbies": ["volleyball", "reading books", "programming", "photography"]
+    },
+    {
+        "id": "66f8a9c7-93f7-4f95-b8e1-eb8b5c30cb6b",
+        "username": "Rachel Clare",
+        "age": "35",
+        "hobbies": ["cooking", "watching TV", "practicing yoga"]
+    }
+]
