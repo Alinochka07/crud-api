@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": "12f090fe-0a60-4e17-8be3-c25b7982f78a",
+      "username": "example_user_1",
+      "age": 55,
+      "hobbies": [
+        "listening to music",
+        "dancing"
+      ]
+    },
+    {
+      "id": "8f848d7d-840b-4090-a0f9-b59955ff9ef3",
+      "username": "example_user_2",
+      "age": 55,
+      "hobbies": [
+        "cooking",
+        "dancing"
+      ]
+    }
+  ]
+}
